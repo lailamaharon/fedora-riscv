@@ -8,27 +8,48 @@ ROOT := $(shell pwd)
 # versions work together.  Don't blindly update to the latest
 # versions.  See also:
 # https://github.com/riscv/riscv-pk/issues/18#issuecomment-206115996
-RISCV_QEMU_COMMIT               = 94f5eb73091fb4fe272db3e943f173ecc0f78ffd
-RISCV_QEMU_SHORTCOMMIT          = 94f5eb73
-RISCV_FESVR_COMMIT              = 0f34d7ad311f78455a674224225f5b3056efba1d
-RISCV_FESVR_SHORTCOMMIT         = 0f34d7ad
-RISCV_ISA_SIM_COMMIT            = 3bfc00ef2a1b1f0b0472a39a866261b00f67027e
-RISCV_ISA_SIM_SHORTCOMMIT       = 3bfc00ef
-RISCV_GNU_TOOLCHAIN_COMMIT      = 728afcddcb0526a0f6560c4032da82805f054d58
-RISCV_GNU_TOOLCHAIN_SHORTCOMMIT = 728afcdd
-RISCV_PK_COMMIT                 = 85ae17aa149b9ea114bdd70cc30ea7e73813fb48
-RISCV_PK_SHORTCOMMIT            = 85ae17aa
+# For privspec 1.7:
+#RISCV_QEMU_COMMIT               = 94f5eb73091fb4fe272db3e943f173ecc0f78ffd
+#RISCV_QEMU_SHORTCOMMIT          = 94f5eb73
+#RISCV_FESVR_COMMIT              = 0f34d7ad311f78455a674224225f5b3056efba1d
+#RISCV_FESVR_SHORTCOMMIT         = 0f34d7ad
+#RISCV_ISA_SIM_COMMIT            = 3bfc00ef2a1b1f0b0472a39a866261b00f67027e
+#RISCV_ISA_SIM_SHORTCOMMIT       = 3bfc00ef
+#RISCV_GNU_TOOLCHAIN_COMMIT      = 728afcddcb0526a0f6560c4032da82805f054d58
+#RISCV_GNU_TOOLCHAIN_SHORTCOMMIT = 728afcdd
+#RISCV_PK_COMMIT                 = 85ae17aa149b9ea114bdd70cc30ea7e73813fb48
+#RISCV_PK_SHORTCOMMIT            = 85ae17aa
+# For privspec 1.9:
+RISCV_QEMU_COMMIT               = 48cd3de36ec47f9c74ab6b20101eb3ee5f332e39
+RISCV_QEMU_SHORTCOMMIT          = 48cd3de3
+RISCV_FESVR_COMMIT              = f052ba6311f3e4e8e32e6eeb9e006be01807040b
+RISCV_FESVR_SHORTCOMMIT         = f052ba63
+RISCV_ISA_SIM_COMMIT            = 4fcc71ee8a23c3b4d96218a93a1842dab398be26
+RISCV_ISA_SIM_SHORTCOMMIT       = 4fcc71ee
+RISCV_GNU_TOOLCHAIN_COMMIT      = 1374381e01b30832581d65a56219388fe7d47584
+RISCV_GNU_TOOLCHAIN_SHORTCOMMIT = 1374381e
+RISCV_PK_COMMIT                 = 927979c5af6a69360b5dd61d3b17cd06ae73d1ac
+RISCV_PK_SHORTCOMMIT            = 927979c5
 
 # For the correct versions, see
 # riscv-gnu-toolchain/Makefile.in *_version variables
-BINUTILS_VERSION = 2.25.1
-GLIBC_VERSION    = 2.22
-GCC_VERSION      = 5.3.0
+# For privspec 1.7:
+#BINUTILS_VERSION = 2.25.1
+#GLIBC_VERSION    = 2.22
+#GCC_VERSION      = 5.3.0
+#NEWLIB_VERSION   = 2.2.0
+# For privspec 1.9:
+BINUTILS_VERSION = 2.26
+GLIBC_VERSION    = 2.23
+GCC_VERSION      = 6.1.0
 NEWLIB_VERSION   = 2.2.0
 
-# See linux-4.1.y-riscv branch of
 # https://github.com/riscv/riscv-linux
 KERNEL_VERSION   = 4.1.26
+# For privspec 1.7:
+#KERNEL_BRANCH    = linux-4.1.y-riscv
+# For privspec 1.9:
+KERNEL_BRANCH    = linux-4.1.y-riscv-priv-1.9
 
 # A local copy of Linux git repo so you don't have to keep downloading
 # git commits (optional).
@@ -193,10 +214,7 @@ stage2: stage2-riscv-gnu-toolchain/riscv-gnu-toolchain-$(RISCV_GNU_TOOLCHAIN_SHO
 	fixed-gcc/riscv64-unknown-linux-gnu-cc \
 	fixed-gcc/riscv64-unknown-linux-gnu-gcc \
 	fixed-gcc/riscv64-unknown-linux-gnu-c++ \
-	fixed-gcc/riscv64-unknown-linux-gnu-g++ \
-	stage2-riscv-pk/riscv-pk-$(RISCV_PK_SHORTCOMMIT).tar.gz \
-	stage2-riscv-pk/riscv-pk.spec \
-	stamp-riscv-pk-installed
+	fixed-gcc/riscv64-unknown-linux-gnu-g++
 
 stage2-riscv-gnu-toolchain/riscv-gnu-toolchain-$(RISCV_GNU_TOOLCHAIN_SHORTCOMMIT).tar.gz:
 	rm -f $@ $@-t
@@ -213,10 +231,6 @@ stage2-riscv-gnu-toolchain/binutils-$(BINUTILS_VERSION).tar.gz:
 stage2-riscv-gnu-toolchain/gcc-$(GCC_VERSION).tar.gz:
 	rm -f $@ $@-t
 	wget -O $@-t http://mirrors.kernel.org/gnu/gcc/gcc-$(GCC_VERSION)/gcc-$(GCC_VERSION).tar.gz
-	zcat $@-t | tar xf -
-	cd gcc-$(GCC_VERSION) && patch -p0 < ../stage2-riscv-gnu-toolchain/gcc-5-fix-compilation-with-gcc-6.patch
-	tar zcf $@-t gcc-$(GCC_VERSION)
-	rm -r gcc-$(GCC_VERSION)
 	mv $@-t $@
 
 stage2-riscv-gnu-toolchain/glibc-$(GLIBC_VERSION).tar.gz:
@@ -367,7 +381,7 @@ stage3-kernel/linux-$(KERNEL_VERSION)/vmlinux:
 	cd stage3-kernel/linux-$(KERNEL_VERSION) && \
 	git remote add riscv https://github.com/riscv/riscv-linux && \
 	git fetch riscv && \
-	git checkout -f linux-4.1.y-riscv && \
+	git checkout -f $(KERNEL_BRANCH) && \
 	make mrproper && \
 	make ARCH=riscv defconfig
 	( \

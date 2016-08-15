@@ -11,7 +11,7 @@
 
 Name:           riscv-gnu-toolchain
 Version:        0
-Release:        0.5.git@SHORTCOMMIT@%{?dist}
+Release:        0.6.git@SHORTCOMMIT@%{?dist}
 Summary:        RISC-V GNU cross-toolchain, containing binutils and GCC
 License:        GPLv2+ and LGPLv2+ and BSD
 
@@ -96,6 +96,12 @@ rm -r $RPM_BUILD_ROOT%{_datadir}/locale
 
 # Remove this libtool linker file.
 rm $RPM_BUILD_ROOT%{_libdir}/libcc1.la
+
+# Don't know why these are created.
+# Be careful about deleting them.
+if [ -f $RPM_BUILD_ROOT$RPM_BUILD_ROOT/usr/sysroot/usr/include/_G_config.h ]; then
+    find $RPM_BUILD_ROOT$RPM_BUILD_ROOT/usr/sysroot -type f -delete
+fi
 
 
 %files
